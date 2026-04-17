@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { questionService } from '@/services/question.service';
 import { Spinner } from '@/components/ui/spinner';
+import { Download } from 'lucide-react';
 
 export function AddQuestionDialog({ onSuccess }: { onSuccess: () => void }) {
   const [open, setOpen] = useState(false);
@@ -35,6 +36,10 @@ export function AddQuestionDialog({ onSuccess }: { onSuccess: () => void }) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Ở đây bạn có thể gọi hàm validateExcelFile() nếu đã cài thư viện xlsx
+    // Hiện tại tôi giữ logic gửi thẳng lên Server để Backend check
+    
     const formData = new FormData();
     formData.append('file', file);
     setUploading(true);
@@ -42,8 +47,8 @@ export function AddQuestionDialog({ onSuccess }: { onSuccess: () => void }) {
       await questionService.import(formData);
       onSuccess();
       setOpen(false);
-    } catch {
-      alert('Lỗi import');
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'File không đúng định dạng hoặc lỗi server');
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -54,47 +59,53 @@ export function AddQuestionDialog({ onSuccess }: { onSuccess: () => void }) {
     <Dialog open={open} onOpenChange={(val) => { setOpen(val); if(!val) reset(); }}>
       <DialogTrigger asChild><Button size="sm">Thêm câu hỏi</Button></DialogTrigger>
       <DialogContent className="max-w-xl rounded-md border">
-        <DialogHeader><DialogTitle>Câu hỏi mới</DialogTitle></DialogHeader>
-        <div className="flex gap-4 border-b text-sm">
-          <button onClick={() => setMode('manual')} className={`pb-2 ${mode === 'manual' ? 'border-b-2 border-primary font-bold' : 'text-gray-400'}`}>Thủ công</button>
-          <button onClick={() => setMode('excel')} className={`pb-2 ${mode === 'excel' ? 'border-b-2 border-primary font-bold' : 'text-gray-400'}`}>Excel</button>
+        <DialogHeader><DialogTitle className="text-sm font-bold uppercase tracking-tight">Câu hỏi mới</DialogTitle></DialogHeader>
+        
+        <div className="flex gap-4 border-b text-[10px] font-bold uppercase tracking-widest">
+          <button onClick={() => setMode('manual')} className={`pb-2 ${mode === 'manual' ? 'border-b-2 border-primary text-primary' : 'text-gray-400'}`}>Thủ công</button>
+          <button onClick={() => setMode('excel')} className={`pb-2 ${mode === 'excel' ? 'border-b-2 border-primary text-primary' : 'text-gray-400'}`}>Nhập Excel</button>
         </div>
+
         <div className="pt-4">
           {mode === 'manual' ? (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1">
-                <Label>Nội dung</Label>
-                <textarea {...register('content')} rows={3} className="w-full border rounded-md p-2 text-sm focus:outline-none focus:border-primary" />
+                <Label className="text-[10px] text-gray-400 font-bold uppercase">Nội dung câu hỏi</Label>
+                <textarea {...register('content')} rows={3} className="w-full border rounded-md p-2 text-xs focus:outline-none focus:border-primary" />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {['a', 'b', 'c', 'd'].map(opt => (
-                  <Input key={opt} {...register(`option_${opt}` as any)} placeholder={`Đáp án ${opt.toUpperCase()}`} className="h-9" />
+                  <Input key={opt} {...register(`option_${opt}` as any)} placeholder={`Đáp án ${opt.toUpperCase()}`} className="h-9 text-xs" />
                 ))}
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Đáp án đúng</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-gray-400 font-bold uppercase">Đáp án đúng</Label>
                 <div className="flex gap-2">
                   {['A', 'B', 'C', 'D'].map(ans => (
-                    <Button key={ans} type="button" variant={watch('correct_answer') === ans ? 'default' : 'outline'} size="sm" className="w-10" onClick={() => setValue('correct_answer' as any, ans)}>{ans}</Button>
+                    <Button key={ans} type="button" variant={watch('correct_answer') === ans ? 'default' : 'outline'} size="sm" className="w-10 text-xs" onClick={() => setValue('correct_answer' as any, ans)}>{ans}</Button>
                   ))}
                 </div>
               </div>
               <div className="flex justify-end gap-2 border-t pt-4">
-                <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Huỷ</Button>
-                <Button size="sm" type="submit" disabled={submitting}>{submitting ? '...' : 'Lưu'}</Button>
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => setOpen(false)}>Huỷ</Button>
+                <Button size="sm" type="submit" className="text-xs px-6" disabled={submitting}>{submitting ? '...' : 'Lưu'}</Button>
               </div>
             </form>
           ) : (
             <div className="space-y-4">
               <div 
                 onClick={() => !uploading && fileRef.current?.click()} 
-                className="p-10 border-2 border-dashed rounded-md text-center cursor-pointer hover:bg-gray-50 transition-colors"
+                className="p-12 border-2 border-dashed border-gray-100 rounded-md text-center cursor-pointer hover:bg-gray-50"
               >
                 <input ref={fileRef} type="file" className="hidden" accept=".xlsx,.xls" onChange={handleFileChange} />
-                {uploading ? <Spinner /> : <p className="text-sm text-gray-500">Nhấn để chọn file Excel (.xlsx)</p>}
+                {uploading ? <Spinner /> : <p className="text-[10px] text-gray-400 font-bold uppercase">Chọn file Excel (.xlsx)</p>}
               </div>
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Đóng</Button>
+              
+              <div className="flex justify-between items-center bg-gray-50 p-3 rounded-md">
+                <p className="text-[10px] text-gray-500 italic">Vui lòng sử dụng file mẫu để tránh lỗi.</p>
+                <a href="/templates/import_questions_template.xlsx" download="Mau_Nhap_Cau_Hoi.xlsx" className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline">
+                  <Download className="w-3 h-3" /> TẢI FILE MẪU
+                </a>
               </div>
             </div>
           )}

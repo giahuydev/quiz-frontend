@@ -6,9 +6,6 @@ import { StatsGrid } from '@/components/teacher/StatsGrid';
 export default function DashboardPage() {
   const { user } = useAuth();
   
-  // Sau này bạn sẽ gọi API để lấy các con số thực tế tại đây
-  // Ví dụ: const { data: stats } = useSWR('/api/teacher/stats', fetcher);
-  
   const stats = [
     { label: 'Lớp học', value: 0 },
     { label: 'Câu hỏi', value: 0 },

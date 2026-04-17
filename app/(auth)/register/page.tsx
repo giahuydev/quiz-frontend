@@ -9,7 +9,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input }  from '@/components/ui/input';
 import { Label }  from '@/components/ui/label';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Role } from '@/types/auth';
 
 const schema = z.object({
@@ -22,7 +21,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function RegisterPage() {
   const { register: authRegister } = useAuth();
-  const [error,   setError]   = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
@@ -34,53 +33,47 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     setError(''); setLoading(true);
-    try {
-      await authRegister(data);
-    } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Đăng ký thất bại');
-    } finally {
-      setLoading(false);
-    }
+    try { await authRegister(data); } 
+    catch (e: any) { setError(e?.response?.data?.message ?? 'Đăng ký thất bại'); } 
+    finally { setLoading(false); }
   };
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardHeader className="pb-4"><CardTitle className="text-lg font-semibold">Tạo tài khoản</CardTitle></CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Vai trò</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(['TEACHER', 'STUDENT'] as Role[]).map((r) => (
-                <button key={r} type="button" onClick={() => setValue('role', r)}
-                  className={['py-2.5 px-3 rounded border text-sm font-medium transition-colors', role === r ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'].join(' ')}>
-                  {r === 'TEACHER' ? 'Giảng viên' : 'Sinh viên'}
-                </button>
-              ))}
-            </div>
+    <div className="w-full max-w-sm border border-gray-200 rounded-md bg-white p-6">
+      <h1 className="text-lg font-bold text-center mb-6 text-gray-900 uppercase tracking-tight">Tạo tài khoản</h1>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1">
+          <Label className="text-[10px] font-bold text-gray-400 uppercase">Vai trò</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {(['TEACHER', 'STUDENT'] as Role[]).map((r) => (
+              <button key={r} type="button" onClick={() => setValue('role', r)}
+                className={`py-1.5 rounded-md border text-xs font-bold transition-all ${role === r ? 'bg-primary text-white border-primary' : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200'}`}>
+                {r === 'TEACHER' ? 'Giáo viên' : 'Sinh viên'}
+              </button>
+            ))}
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="name">Họ và tên</Label>
-            <Input id="name" placeholder="Nguyễn Văn A" {...register('name')} />
-            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="example@email.com" {...register('email')} />
-            {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Mật khẩu</Label>
-            <Input id="password" type="password" placeholder="Tối thiểu 6 ký tự" {...register('password')} />
-            {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
-          </div>
-          {error && <p className="text-xs text-red-500 bg-red-50 border border-red-200 px-3 py-2 rounded">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}</Button>
-        </form>
-      </CardContent>
-      <CardFooter className="justify-center pt-0">
-        <p className="text-sm text-gray-500">Đã có tài khoản? <Link href="/login" className="text-gray-900 font-medium underline underline-offset-2">Đăng nhập</Link></p>
-      </CardFooter>
-    </Card>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] font-bold text-gray-400 uppercase">Họ và tên</Label>
+          <Input placeholder="Nguyễn Văn A" {...register('name')} />
+          {errors.name && <p className="text-[10px] text-red-500">{errors.name.message}</p>}
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] font-bold text-gray-400 uppercase">Email</Label>
+          <Input type="email" placeholder="email@example.com" {...register('email')} />
+          {errors.email && <p className="text-[10px] text-red-500">{errors.email.message}</p>}
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] font-bold text-gray-400 uppercase">Mật khẩu</Label>
+          <Input type="password" placeholder="••••••••" {...register('password')} />
+          {errors.password && <p className="text-[10px] text-red-500">{errors.password.message}</p>}
+        </div>
+        {error && <p className="text-xs text-red-500 text-center">{error}</p>}
+        <Button type="submit" className="w-full" disabled={loading}>{loading ? '...' : 'Tạo tài khoản'}</Button>
+      </form>
+      <div className="mt-6 pt-4 border-t text-center text-xs text-gray-500">
+        Đã có tài khoản? <Link href="/login" className="font-bold text-gray-900">Đăng nhập</Link>
+      </div>
+    </div>
   );
 }

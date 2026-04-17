@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { examService } from '@/services/exam.service';
 import { questionService } from '@/services/question.service';
+import { Download } from 'lucide-react';
 import type { Question } from '@/types/exam';
 
 export default function NewExamPage() {
@@ -152,6 +153,14 @@ export default function NewExamPage() {
               <input ref={fileRef} type="file" className="hidden" accept=".xlsx,.xls" onChange={handleFileChange} />
               {uploading ? <Spinner /> : <p className="text-[10px] text-gray-400 font-bold uppercase">Nhấn để chọn file Excel</p>}
             </div>
+            
+            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-md">
+              <p className="text-[10px] text-gray-500 italic">Dùng file mẫu để tránh lỗi cấu hình.</p>
+              <a href="/templates/import_questions_template.xlsx" download="Mau_Nhap_De_Thi.xlsx" className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline">
+                <Download className="w-3 h-3" /> TẢI FILE MẪU
+              </a>
+            </div>
+
             {excelPreview.length > 0 && (
               <div className="text-[10px] text-gray-400 font-mono bg-gray-50 p-2 border rounded">
                 Đã nhận {excelPreview.length} câu hỏi từ file.

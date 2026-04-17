@@ -13,16 +13,16 @@ import { formatDate } from '@/lib/utils';
 import type { Announcement } from '@/types/class';
 
 export default function StudentClassDetailPage() {
-  const params  = useParams();
-  const router  = useRouter();
-  const id      = Number(params.id);
+  const params = useParams();
+  const router = useRouter();
+  const id = Number(params.id);
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [open,          setOpen]          = useState(false);
-  const [code,          setCode]          = useState('');
-  const [error,         setError]         = useState('');
-  const [submitting,    setSubmitting]    = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [examOpen, setExamOpen] = useState(false);
+  const [accessCode, setAccessCode] = useState('');
+  const [examError, setExamError] = useState('');
+  const [joining, setJoining] = useState(false);
 
   useEffect(() => {
     classService.getAnnouncements(id)
@@ -31,66 +31,63 @@ export default function StudentClassDetailPage() {
   }, [id]);
 
   const handleJoinExam = async () => {
-    if (!code.trim()) return;
-    setError('');
-    setSubmitting(true);
+    if (!accessCode.trim()) return;
+    setJoining(true);
+    setExamError('');
     try {
-      const r = await sessionService.join({ access_code: code.toUpperCase() });
-      setOpen(false);
+      const r = await sessionService.join({ access_code: accessCode.toUpperCase() });
+      setExamOpen(false);
       router.push(`/waiting-room/${r.data.session_id}`);
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Mã không hợp lệ hoặc chưa đến giờ mở phòng chờ');
+      setExamError(e?.response?.data?.message || 'Mã phòng thi không đúng');
     } finally {
-      setSubmitting(false);
+      setJoining(false);
     }
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Thông báo lớp học</h1>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); setError(''); }}>
+    <div className="space-y-6 max-w-3xl mx-auto pb-10">
+      <div className="flex items-center justify-between border-b pb-4">
+        <div>
+          <h1 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Thông báo lớp học</h1>
+          <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Cập nhật mới nhất từ giảng viên</p>
+        </div>
+        
+        {/* Nút Vào thi nhanh đồng bộ với Trang chủ */}
+        <Dialog open={examOpen} onOpenChange={setExamOpen}>
           <DialogTrigger asChild>
-            <Button size="sm">Vào phòng thi</Button>
+            <Button size="sm" variant="outline" className="text-[10px] font-bold uppercase border-primary text-primary hover:bg-primary/5">Vào thi nhanh</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-sm">
-            <DialogHeader><DialogTitle>Nhập mã phòng thi</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-xs rounded-md">
+            <DialogHeader><DialogTitle className="text-xs font-bold uppercase">Nhập mã phòng thi</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
-              <div className="space-y-1.5">
-                <Label>Access code</Label>
-                <Input placeholder="VD: EXAM123" value={code}
-                  onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(''); }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleJoinExam()} />
-                {error && <p className="text-xs text-red-500">{error}</p>}
-                <p className="text-xs text-gray-400">Nhập mã từ thông báo của giảng viên</p>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold text-gray-400 uppercase">Access Code</Label>
+                <Input placeholder="..." value={accessCode} className="uppercase font-mono" onChange={(e) => setAccessCode(e.target.value)} />
+                {examError && <p className="text-[10px] text-red-500 font-medium">{examError}</p>}
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Huỷ</Button>
-                <Button size="sm" onClick={handleJoinExam} disabled={submitting}>
-                  {submitting ? 'Đang vào...' : 'Vào phòng chờ'}
-                </Button>
-              </div>
+              <Button size="sm" className="w-full" onClick={handleJoinExam} disabled={joining}>{joining ? '...' : 'VÀO PHÒNG CHỜ'}</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {loading ? <Spinner /> : (
+      {loading ? <div className="flex justify-center py-10"><Spinner /></div> : (
         <div className="space-y-3">
           {announcements.map((a) => (
-            <div key={a.id} className="bg-white border border-gray-200 rounded-lg px-4 py-4">
+            <div key={a.id} className="border border-gray-100 rounded-md p-4 bg-white">
               <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-medium text-gray-900 text-sm">{a.title}</p>
-                  <p className="text-sm text-gray-600 mt-1 leading-relaxed">{a.content}</p>
+                <div className="space-y-1">
+                  <h3 className="text-xs font-bold text-gray-900 uppercase">{a.title}</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">{a.content}</p>
                 </div>
-                <span className="text-xs text-gray-400 whitespace-nowrap">{formatDate(a.created_at)}</span>
+                <span className="text-[9px] font-bold text-gray-300 whitespace-nowrap uppercase">{formatDate(a.created_at)}</span>
               </div>
             </div>
           ))}
           {announcements.length === 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg px-4 py-8 text-center text-sm text-gray-400">
-              Chưa có thông báo nào
+            <div className="border border-dashed rounded-md p-10 text-center text-[10px] text-gray-400 uppercase font-bold italic">
+              Lớp học chưa có thông báo nào
             </div>
           )}
         </div>

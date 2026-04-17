@@ -1,103 +1,145 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useCountdown } from '@/hooks/useCountdown';
 import { formatCountdown } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-
-const mockQuestions = [
-  { id: 1, content: 'HTML là viết tắt của?', options: [{ key: 'A', text: 'Hyper Text Markup Language' }, { key: 'B', text: 'High Text Machine Language' }, { key: 'C', text: 'Hyper Tabular Markup Language' }, { key: 'D', text: 'Home Tool Markup Language' }] },
-  { id: 2, content: 'CSS dùng để làm gì?', options: [{ key: 'A', text: 'Xử lý logic' }, { key: 'B', text: 'Định dạng giao diện' }, { key: 'C', text: 'Kết nối database' }, { key: 'D', text: 'Quản lý server' }] },
-  { id: 3, content: 'JavaScript là ngôn ngữ gì?', options: [{ key: 'A', text: 'Ngôn ngữ lập trình biên dịch' }, { key: 'B', text: 'Ngôn ngữ đánh dấu' }, { key: 'C', text: 'Ngôn ngữ kịch bản phía client' }, { key: 'D', text: 'Ngôn ngữ truy vấn' }] },
-];
-
-const END_TIME = new Date(Date.now() + 60 * 60 * 1000);
+import { resultService } from '@/services/result.service';
 
 export default function ExamPage() {
   const params = useParams();
   const router = useRouter();
-  const [current,  setCurrent]  = useState(0);
-  const [answers,  setAnswers]  = useState<Record<number, string>>({});
-  const [overlay,  setOverlay]  = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const violationRef = useRef(0);
+  const resultId = Number(params.resultId);
+  
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [overlay, setOverlay] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [endTime, setEndTime] = useState<Date>(new Date());
 
-  const seconds = useCountdown(END_TIME, () => handleSubmit());
+  const seconds = useCountdown(endTime, () => handleSubmit());
 
   useEffect(() => {
-    document.documentElement.requestFullscreen().catch(() => {});
-    const handleVisibility = () => document.visibilityState === 'hidden' && (violationRef.current += 1);
-    const handleFullscreen = () => !document.fullscreenElement && setOverlay(true);
+    resultService.getById(resultId)
+      .then((r) => {
+        const data = r.data;
+        setQuestions(data.questions || []);
+        setEndTime(new Date(data.end_time || Date.now() + 60 * 60 * 1000));
+        const saved: Record<number, string> = {};
+        data.questions?.forEach((q: any) => {
+          if (q.student_answer) saved[q.id] = q.student_answer;
+        });
+        setAnswers(saved);
+      })
+      .finally(() => setLoading(false));
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        console.log('Vi phạm: Chuyển tab');
+      }
+    };
+    const handleFullscreen = () => {
+      if (!document.fullscreenElement) setOverlay(true);
+    };
+
     document.addEventListener('visibilitychange', handleVisibility);
     document.addEventListener('fullscreenchange', handleFullscreen);
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
       document.removeEventListener('fullscreenchange', handleFullscreen);
     };
-  }, []);
+  }, [resultId]);
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    router.push(`/student/results/${params.resultId}`);
+  const handleSelectAnswer = (questionId: number, answer: string) => {
+    setAnswers({ ...answers, [questionId]: answer });
   };
 
-  if (submitted) return <div className="h-screen flex items-center justify-center"><Spinner /></div>;
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await resultService.submit(resultId);
+      router.push(`/student/results/${resultId}`);
+    } catch {
+      alert('Lỗi khi nộp bài');
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) return <div className="h-screen flex items-center justify-center"><Spinner /></div>;
+  if (questions.length === 0) return <div className="h-screen flex items-center justify-center text-xs text-gray-400">Không có dữ liệu đề thi</div>;
+
+  const currentQ = questions[current];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col font-sans select-none">
       {overlay && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-8 max-w-sm text-center space-y-4">
-            <p className="text-lg font-semibold text-gray-900">Bạn đã thoát toàn màn hình</p>
-            <p className="text-sm text-gray-500">Vui lòng quay lại toàn màn hình để tiếp tục làm bài.</p>
-            <Button onClick={() => { document.documentElement.requestFullscreen().catch(() => {}); setOverlay(false); }}>Quay lại toàn màn hình</Button>
+        <div className="fixed inset-0 bg-gray-900/95 z-50 flex items-center justify-center p-6 text-center">
+          <div className="max-w-xs space-y-4">
+            <h2 className="text-sm font-bold text-white uppercase tracking-widest">Cảnh báo vi phạm</h2>
+            <p className="text-[11px] text-gray-400 leading-relaxed uppercase">Bạn đã thoát khỏi chế độ thi. Vui lòng quay lại toàn màn hình để tiếp tục.</p>
+            <Button size="sm" className="w-full" onClick={() => { document.documentElement.requestFullscreen().catch(() => {}); setOverlay(false); }}>
+              Quay lại toàn màn hình
+            </Button>
           </div>
         </div>
       )}
 
-      <div className="border-b border-gray-200 px-6 py-3 flex items-center justify-between bg-white sticky top-0 z-10">
-        <div className="text-sm font-medium text-gray-900">Kiểm tra giữa kỳ</div>
-        <div className={['font-mono text-lg font-bold tabular-nums', seconds < 300 ? 'text-red-600' : 'text-gray-900'].join(' ')}>{formatCountdown(seconds)}</div>
-        <Button size="sm" variant="outline" onClick={() => confirm(`Bạn đã trả lời ${Object.keys(answers).length}/${mockQuestions.length} câu. Xác nhận nộp bài?`) && handleSubmit()}>Nộp bài</Button>
+      <div className="border-b border-gray-100 px-6 py-3 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Exam Session #{resultId}</div>
+        <div className={`font-mono text-xl font-bold tabular-nums tracking-tighter ${seconds < 300 ? 'text-red-500' : 'text-gray-900'}`}>
+          {formatCountdown(seconds)}
+        </div>
+        <Button size="xs" variant="outline" className="font-bold uppercase tracking-tighter text-[9px]" onClick={() => confirm('Xác nhận nộp bài?') && handleSubmit()}>
+          Nộp bài
+        </Button>
       </div>
 
-      <div className="flex flex-1">
-        <div className="flex-1 px-8 py-6 max-w-2xl mx-auto">
-          <p className="text-xs text-gray-400 mb-2">Câu {current + 1} / {mockQuestions.length}</p>
-          <p className="text-base font-medium text-gray-900 mb-6">{mockQuestions[current].content}</p>
-          <div className="space-y-3">
-            {mockQuestions[current].options.map((opt) => {
-              const selected = answers[mockQuestions[current].id] === opt.key;
-              return (
-                <button key={opt.key} onClick={() => setAnswers({...answers, [mockQuestions[current].id]: opt.key})}
-                  className={['w-full flex items-center gap-3 px-4 py-3 rounded-lg border text-sm text-left transition-colors',
-                    selected ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 hover:border-gray-400 text-gray-700'].join(' ')}>
-                  <span className={['w-6 h-6 rounded-full border flex items-center justify-center text-xs font-medium flex-shrink-0',
-                    selected ? 'border-white text-white' : 'border-gray-300 text-gray-500'].join(' ')}>{opt.key}</span>
-                  {opt.text}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex justify-between mt-8">
-            <Button variant="outline" size="sm" onClick={() => setCurrent(p => Math.max(0, p - 1))} disabled={current === 0}>Câu trước</Button>
-            <Button variant="outline" size="sm" onClick={() => setCurrent(p => Math.min(mockQuestions.length - 1, p + 1))} disabled={current === mockQuestions.length - 1}>Câu tiếp</Button>
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-6 py-8">
+          <div className="max-w-xl mx-auto space-y-8">
+            <div className="space-y-4">
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest border-b-2 border-primary pb-1">Câu hỏi {current + 1}</span>
+              <p className="text-sm font-bold text-gray-900 leading-relaxed uppercase tracking-tight">{currentQ.content}</p>
+            </div>
+
+            <div className="space-y-2">
+              {['A', 'B', 'C', 'D'].map((key) => {
+                const optText = currentQ[`option_${key.toLowerCase()}`];
+                const selected = answers[currentQ.id] === key;
+                return (
+                  <button key={key} onClick={() => handleSelectAnswer(currentQ.id, key)}
+                    className={`w-full flex items-start gap-4 px-4 py-4 rounded border text-xs text-left transition-all ${selected ? 'border-primary bg-primary text-white shadow-sm' : 'border-gray-100 text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${selected ? 'border-white text-white' : 'border-gray-200 text-gray-400'}`}>
+                      {key}
+                    </span>
+                    <span className="font-medium pt-0.5">{optText}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-between pt-6 border-t border-gray-50">
+              <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase" onClick={() => setCurrent(p => Math.max(0, p - 1))} disabled={current === 0}>Trước</Button>
+              <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase" onClick={() => setCurrent(p => Math.min(questions.length - 1, p + 1))} disabled={current === questions.length - 1}>Tiếp theo</Button>
+            </div>
           </div>
         </div>
 
-        <div className="w-52 border-l border-gray-100 px-4 py-6 hidden md:block">
-          <p className="text-xs font-medium text-gray-700 mb-1">Danh sách câu hỏi</p>
-          <p className="text-xs text-gray-400 mb-4">{Object.keys(answers).length}/{mockQuestions.length} đã trả lời</p>
-          <div className="grid grid-cols-5 gap-1.5 mb-4">
-            {mockQuestions.map((q, i) => (
+        <div className="w-48 border-l border-gray-100 p-4 hidden lg:block overflow-y-auto bg-gray-50/30">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Câu hỏi</p>
+          <div className="grid grid-cols-4 gap-1">
+            {questions.map((q, i) => (
               <button key={q.id} onClick={() => setCurrent(i)}
-                className={['w-7 h-7 rounded text-xs font-medium transition-colors relative',
-                  i === current ? 'bg-gray-900 text-white ring-2 ring-gray-900 ring-offset-1' :
-                  answers[q.id] ? 'bg-gray-900 text-white opacity-60' : 'bg-white border border-gray-200 text-gray-400 hover:border-gray-400'].join(' ')}>
+                className={`w-9 h-9 rounded text-[10px] font-bold transition-all border ${i === current ? 'bg-primary text-white border-primary shadow-sm scale-105' : answers[q.id] ? 'bg-gray-900/10 border-transparent text-gray-600' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'}`}
+              >
                 {i + 1}
-                {answers[q.id] && i !== current && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full" />}
               </button>
             ))}
           </div>
