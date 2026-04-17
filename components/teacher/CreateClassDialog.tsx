@@ -7,11 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { classService } from '@/services/class.service';
 
-interface CreateClassDialogProps {
-  onCreated: (newClass: any) => void;
-}
-
-export function CreateClassDialog({ onCreated }: CreateClassDialogProps) {
+export function CreateClassDialog({ onCreated }: { onCreated: (c: any) => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -24,8 +20,6 @@ export function CreateClassDialog({ onCreated }: CreateClassDialogProps) {
       onCreated(r.data);
       setName('');
       setOpen(false);
-    } catch {
-      alert('Tạo lớp thất bại');
     } finally {
       setSubmitting(false);
     }
@@ -33,37 +27,17 @@ export function CreateClassDialog({ onCreated }: CreateClassDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="shadow-sm">Tạo lớp mới</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-sm rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Tạo lớp học mới</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="class-name" className="text-sm font-semibold text-gray-700">Tên lớp học</Label>
-            <Input 
-              id="class-name"
-              placeholder="VD: Lập trình Web" 
-              value={name}
-              className="focus-visible:ring-primary/20"
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreate()} 
-            />
+      <DialogTrigger asChild><Button size="sm">Tạo lớp mới</Button></DialogTrigger>
+      <DialogContent className="max-w-xs rounded-md">
+        <DialogHeader><DialogTitle>Tạo lớp học</DialogTitle></DialogHeader>
+        <div className="space-y-4 pt-2">
+          <div className="space-y-1">
+            <Label>Tên lớp</Label>
+            <Input placeholder="..." value={name} onChange={(e) => setName(e.target.value)} />
           </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="text-gray-500">
-              Huỷ
-            </Button>
-            <Button 
-              size="sm" 
-              onClick={handleCreate} 
-              disabled={submitting || !name.trim()}
-              className="px-6"
-            >
-              {submitting ? 'Đang tạo...' : 'Tạo lớp'}
-            </Button>
+          <div className="flex gap-2 justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Huỷ</Button>
+            <Button size="sm" onClick={handleCreate} disabled={submitting}>Tạo</Button>
           </div>
         </div>
       </DialogContent>

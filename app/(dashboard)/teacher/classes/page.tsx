@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Spinner } from '@/components/ui/spinner';
 import { classService } from '@/services/class.service';
 import type { Class } from '@/types/class';
@@ -11,26 +11,30 @@ export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    classService.getAll()
-      .then((r) => setClasses(r.data))
-      .finally(() => setLoading(false));
+  const fetchClasses = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await classService.getAll();
+      setClasses(r.data);
+    } catch {
+      // API not ready
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleClassCreated = (newClass: Class) => {
-    setClasses((prev) => [...prev, newClass]);
-  };
+  useEffect(() => {
+    fetchClasses();
+  }, [fetchClasses]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+      <div className="flex items-center justify-between border-b pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản lý lớp học</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Bạn đang có <span className="font-semibold text-primary">{classes.length}</span> lớp học đang hoạt động
-          </p>
+          <h1 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Lớp học của tôi</h1>
+          <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Quản lý danh sách và sinh viên</p>
         </div>
-        <CreateClassDialog onCreated={handleClassCreated} />
+        <CreateClassDialog onCreated={fetchClasses} />
       </div>
 
       {loading ? (

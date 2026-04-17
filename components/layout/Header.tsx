@@ -3,25 +3,20 @@
 import { usePathname } from 'next/navigation';
 
 const titles: Record<string, string> = {
-  '/teacher/dashboard': 'Tổng quan',
-  '/teacher/classes':   'Quản lý lớp học',
-  '/teacher/questions': 'Ngân hàng câu hỏi',
-  '/teacher/exams':     'Quản lý đề thi',
+  '/teacher/dashboard': 'Dashboard',
+  '/teacher/classes':   'Lớp học',
+  '/teacher/questions': 'Câu hỏi',
+  '/teacher/exams':     'Đề thi',
   '/teacher/sessions':  'Kỳ thi',
 };
 
-function getTitle(pathname: string): string {
-  for (const [path, title] of Object.entries(titles)) {
-    if (pathname === path || pathname.startsWith(path + '/')) return title;
-  }
-  return 'Quiz Online';
-}
-
 export default function Header() {
   const pathname = usePathname();
+  const title = Object.entries(titles).find(([path]) => pathname === path || pathname.startsWith(path + '/'))?.[1] || 'Hệ thống';
+  
   return (
-    <header className="h-12 bg-white border-b border-gray-200 flex items-center px-6 sticky top-0 z-20">
-      <h2 className="text-sm font-semibold text-gray-800">{getTitle(pathname)}</h2>
+    <header className="h-10 bg-white border-b border-gray-100 flex items-center px-4 sticky top-0 z-10">
+      <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">{title}</h2>
     </header>
   );
 }

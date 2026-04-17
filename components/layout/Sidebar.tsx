@@ -3,14 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { 
-  LayoutDashboard, 
-  Users, 
-  HelpCircle, 
-  FileText, 
-  Calendar, 
-  LogOut 
-} from 'lucide-react';
+import { LayoutDashboard, Users, HelpCircle, FileText, Calendar, LogOut } from 'lucide-react';
 
 const navItems = [
   { label: 'Tổng quan', href: '/teacher/dashboard', icon: LayoutDashboard },
@@ -25,44 +18,33 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="w-56 h-screen bg-white border-r border-gray-200 flex flex-col fixed left-0 top-0 z-30">
-      <div className="px-4 py-4 border-b border-gray-100">
-        <span className="font-semibold text-gray-900 text-sm">Quiz Online</span>
+    <aside className="w-48 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0">
+      <div className="px-4 py-4 border-b">
+        <span className="font-bold text-gray-900 text-xs uppercase tracking-tight">Quiz System</span>
       </div>
 
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + '/');
           const Icon = item.icon;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={[
-                'flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-colors',
-                active
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-              ].join(' ')}
+            <Link key={item.href} href={item.href}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs ${active ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50'}`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5" />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="px-2 py-3 border-t border-gray-100">
-        <div className="px-3 py-2 mb-1">
-          <p className="text-xs font-medium text-gray-900 truncate">{user?.name}</p>
-          <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+      <div className="p-2 border-t">
+        <div className="px-3 py-2 mb-2">
+          <p className="text-[10px] font-bold text-gray-900 truncate uppercase">{user?.name}</p>
+          <p className="text-[10px] text-gray-400 truncate">{user?.email}</p>
         </div>
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          Đăng xuất
+        <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-red-500 hover:bg-red-50">
+          <LogOut className="w-3.5 h-3.5" /> Thoát
         </button>
       </div>
     </aside>
