@@ -1,156 +1,151 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input }  from '@/components/ui/input';
-import { Label }  from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { classService } from '@/services/class.service';
 import { formatDate } from '@/lib/utils';
-import type { ClassMember, Announcement } from '@/types/class';
+import { Users, Megaphone } from 'lucide-react';
 
-type Tab = 'announcements' | 'members';
-
-export default function ClassDetailPage() {
+export default function TeacherClassDetailPage() {
   const params = useParams();
-  const id     = Number(params.id);
+  const classId = Number(params.id);
+  
+  const [tab, setTab] = useState<'announcements' | 'members'>('announcements');
+  const [loading, setLoading] = useState(true);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [classInfo, setClassInfo] = useState<any>(null);
+  
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const [tab,           setTab]           = useState<Tab>('announcements');
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [members,       setMembers]       = useState<ClassMember[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [open,          setOpen]          = useState(false);
-  const [title,         setTitle]         = useState('');
-  const [content,       setContent]       = useState('');
-  const [submitting,    setSubmitting]    = useState(false);
-
-  useEffect(() => {
-    Promise.all([
-      classService.getAnnouncements(id),
-      classService.getMembers(id),
-    ]).then(([annRes, memRes]) => {
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [classRes, annRes, memberRes] = await Promise.all([
+        classService.getById(classId),
+        classService.getAnnouncements(classId),
+        classService.getMembers(classId)
+      ]);
+      setClassInfo(classRes.data);
       setAnnouncements(annRes.data);
-      setMembers(memRes.data);
-    }).finally(() => setLoading(false));
-  }, [id]);
+      setMembers(memberRes.data);
+    } catch {
+      // API not ready
+    } finally {
+      setLoading(false);
+    }
+  }, [classId]);
 
-  const handlePost = async () => {
-    if (!title.trim() || !content.trim()) return;
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handlePostAnnouncement = async () => {
+    if (!newTitle.trim() || !newContent.trim()) return;
     setSubmitting(true);
     try {
-      const r = await classService.createAnnouncement(id, { title, content });
-      setAnnouncements([r.data, ...announcements]);
-      setTitle(''); setContent(''); setOpen(false);
+      await classService.createAnnouncement(classId, { title: newTitle, content: newContent });
+      setNewTitle(''); setNewContent('');
+      const res = await classService.getAnnouncements(classId);
+      setAnnouncements(res.data);
     } catch {
-      alert('Đăng thông báo thất bại');
+      alert('Lỗi khi đăng thông báo');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleRemoveMember = async (studentId: number) => {
-    if (!confirm('Xoá sinh viên này khỏi lớp?')) return;
-    try {
-      await classService.removeMember(id, studentId);
-      setMembers(members.filter((m) => m.student_id !== studentId));
-    } catch {
-      alert('Xoá thất bại');
-    }
-  };
-
-  if (loading) return <Spinner />;
+  if (loading) return <div className="flex justify-center py-20"><Spinner /></div>;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 max-w-4xl mx-auto pb-10">
+      <div className="border-b pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Chi tiết lớp</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{members.length} sinh viên</p>
+          <h1 className="text-sm font-bold text-gray-900 uppercase tracking-widest">{classInfo?.name || 'Chi tiết lớp học'}</h1>
+          <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Mã lớp: <span className="text-primary">{classInfo?.class_code}</span></p>
         </div>
-        {tab === 'announcements' && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button size="sm">Đăng thông báo</Button></DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader><DialogTitle>Đăng thông báo</DialogTitle></DialogHeader>
-              <div className="space-y-3 pt-2">
-                <div className="space-y-1.5">
-                  <Label>Tiêu đề</Label>
-                  <Input placeholder="VD: Lịch thi giữa kỳ" value={title} onChange={(e) => setTitle(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Nội dung</Label>
-                  <textarea rows={4} placeholder="Nhập nội dung..." value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring" />
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Huỷ</Button>
-                  <Button size="sm" onClick={handlePost} disabled={submitting}>{submitting ? 'Đang đăng...' : 'Đăng'}</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
       </div>
 
-      <div className="flex gap-0 border-b border-gray-200">
-        {[
-          { key: 'announcements', label: 'Thông báo' },
-          { key: 'members',       label: 'Thành viên' },
-        ].map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key as Tab)}
-            className={['px-4 py-2 text-sm transition-colors border-b-2 -mb-px',
-              tab === t.key ? 'border-gray-900 text-gray-900 font-medium' : 'border-transparent text-gray-500 hover:text-gray-700',
-            ].join(' ')}>
-            {t.label}
-          </button>
-        ))}
+      <div className="flex gap-4 border-b text-[10px] font-bold uppercase tracking-widest">
+        <button onClick={() => setTab('announcements')} className={`pb-2 flex items-center gap-1.5 ${tab === 'announcements' ? 'border-b-2 border-primary text-primary' : 'text-gray-400'}`}>
+          <Megaphone className="w-3 h-3" /> Thông báo
+        </button>
+        <button onClick={() => setTab('members')} className={`pb-2 flex items-center gap-1.5 ${tab === 'members' ? 'border-b-2 border-primary text-primary' : 'text-gray-400'}`}>
+          <Users className="w-3 h-3" /> Sinh viên ({members.length})
+        </button>
       </div>
 
       {tab === 'announcements' ? (
-        <div className="space-y-3">
-          {announcements.map((a) => (
-            <div key={a.id} className="bg-white border border-gray-200 rounded-lg px-4 py-4 flex items-start justify-between gap-4">
-              <div>
-                <p className="font-medium text-gray-900 text-sm">{a.title}</p>
-                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{a.content}</p>
-              </div>
-              <span className="text-xs text-gray-400 whitespace-nowrap">{formatDate(a.created_at)}</span>
+        <div className="space-y-6">
+          <div className="border border-gray-100 rounded-md p-4 bg-gray-50/30 space-y-3">
+            <div className="space-y-1">
+              <Label className="text-[10px] text-gray-400 uppercase font-bold">Tiêu đề thông báo</Label>
+              <Input placeholder="..." value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="bg-white" />
             </div>
-          ))}
-          {announcements.length === 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg px-4 py-8 text-center text-sm text-gray-400">Chưa có thông báo nào</div>
-          )}
+            <div className="space-y-1">
+              <Label className="text-[10px] text-gray-400 uppercase font-bold">Nội dung</Label>
+              <textarea 
+                className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none focus:border-primary min-h-[80px]"
+                placeholder="Nhập nội dung thông báo cho sinh viên..."
+                value={newContent}
+                onChange={(e) => setNewContent(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button size="sm" className="text-[10px] font-bold uppercase px-6" onClick={handlePostAnnouncement} disabled={submitting}>
+                {submitting ? '...' : 'Đăng thông báo'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {announcements.map((a) => (
+              <div key={a.id} className="border border-gray-100 rounded-md p-4 bg-white">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xs font-bold text-gray-900 uppercase">{a.title}</h3>
+                  <span className="text-[9px] text-gray-300 font-bold">{formatDate(a.created_at)}</span>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">{a.content}</p>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="border border-gray-100 rounded-md overflow-hidden bg-white">
           <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                {['#', 'Sinh viên', 'Ngày tham gia', ''].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
-                ))}
+            <thead className="bg-gray-50/50 border-b border-gray-100">
+              <tr>
+                <th className="text-left px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Họ và tên</th>
+                <th className="text-left px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody>
-              {members.map((m, i) => (
-                <tr key={m.student_id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                  <td className="px-4 py-3 text-gray-400">{i + 1}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{m.name}</p>
-                    <p className="text-xs text-gray-400">{m.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">{formatDate(m.joined_at)}</td>
+            <tbody className="divide-y divide-gray-50">
+              {members.map((m) => (
+                <tr key={m.id} className="hover:bg-gray-50/30">
+                  <td className="px-4 py-3 text-xs font-bold text-gray-700">{m.name}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">{m.email}</td>
                   <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="sm" className="text-xs h-7 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleRemoveMember(m.student_id)}>Xoá</Button>
+                    <Button className="text-red-400 hover:text-red-600 uppercase font-bold text-[9px]"
+                        onClick={async () => {
+                          if (!confirm(`Xoá ${m.name} khỏi lớp?`)) return;
+                          try {
+                            await classService.removeMember(classId, m.student_id);
+                            setMembers(members.filter((x) => x.student_id !== m.student_id));
+                          } catch {
+                            alert('Xoá thất bại');
+                          }
+                        }}
+                      >
+                        Xoá
+                    </Button>
                   </td>
                 </tr>
               ))}
-              {members.length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-400">Chưa có sinh viên nào</td></tr>
-              )}
             </tbody>
           </table>
         </div>

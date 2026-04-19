@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input }  from '@/components/ui/input';
@@ -24,11 +24,19 @@ export default function StudentClassDetailPage() {
   const [examError, setExamError] = useState('');
   const [joining, setJoining] = useState(false);
 
-  useEffect(() => {
-    classService.getAnnouncements(id)
-      .then((r) => setAnnouncements(r.data))
-      .finally(() => setLoading(false));
+  const fetchAnnouncements = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await classService.getAnnouncements(id);
+      setAnnouncements(r.data);
+    } catch {
+      // API not ready
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
 
   const handleJoinExam = async () => {
     if (!accessCode.trim()) return;
@@ -53,7 +61,6 @@ export default function StudentClassDetailPage() {
           <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Cập nhật mới nhất từ giảng viên</p>
         </div>
         
-        {/* Nút Vào thi nhanh đồng bộ với Trang chủ */}
         <Dialog open={examOpen} onOpenChange={setExamOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="outline" className="text-[10px] font-bold uppercase border-primary text-primary hover:bg-primary/5">Vào thi nhanh</Button>

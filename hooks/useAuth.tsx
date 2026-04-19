@@ -1,50 +1,51 @@
 'use client';
 
-import {
-  createContext, useContext, useEffect,
-  useState, useCallback, type ReactNode,
-} from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveToken, getToken, removeToken } from '@/lib/auth';
 import { authService } from '@/services/auth.service';
 import type { User, LoginPayload, RegisterPayload } from '@/types/auth';
 
-interface AuthCtx {
+interface AuthContextType {
   user:     User | null;
   loading:  boolean;
-  login:    (p: LoginPayload)    => Promise<void>;
-  register: (p: RegisterPayload) => Promise<void>;
+  login:    (data: LoginPayload)    => Promise<void>;
+  register: (data: RegisterPayload) => Promise<void>;
   logout:   () => void;
 }
 
-const AuthContext = createContext<AuthCtx | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user,    setUser]    = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) { setLoading(false); return; }
+    const token = getToken(); // dùng lib/auth.ts — key 'quiz_token'
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     authService.me()
-      .then((r) => setUser(r.data))
+      .then((res) => setUser(res.data))
       .catch(() => removeToken())
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (p: LoginPayload) => {
-    const r = await authService.login(p);
-    saveToken(r.data.access_token);
-    setUser(r.data.user);
-    router.push(r.data.user.role === 'TEACHER' ? '/teacher/dashboard' : '/student/home');
+  const login = useCallback(async (data: LoginPayload) => {
+    const res = await authService.login(data);
+    saveToken(res.data.access_token); // lưu vào key 'quiz_token'
+    setUser(res.data.user);
+    router.push(res.data.user.role === 'TEACHER' ? '/teacher/dashboard' : '/student/home');
   }, [router]);
 
-  const register = useCallback(async (p: RegisterPayload) => {
-    const r = await authService.register(p);
-    saveToken(r.data.access_token);
-    setUser(r.data.user);
-    router.push(r.data.user.role === 'TEACHER' ? '/teacher/dashboard' : '/student/home');
+  const register = useCallback(async (data: RegisterPayload) => {
+    const res = await authService.register(data);
+    saveToken(res.data.access_token);
+    setUser(res.data.user);
+    router.push(res.data.user.role === 'TEACHER' ? '/teacher/dashboard' : '/student/home');
   }, [router]);
 
   const logout = useCallback(() => {
@@ -60,8 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth(): AuthCtx {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be inside AuthProvider');
-  return ctx;
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }
