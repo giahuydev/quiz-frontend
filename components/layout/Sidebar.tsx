@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { LayoutDashboard, Users, HelpCircle, FileText, Calendar, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, HelpCircle, FileText, Calendar, LogOut, UserCircle } from 'lucide-react';
 
 const navItems = [
   { label: 'Tổng quan', href: '/teacher/dashboard', icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const navItems = [
   { label: 'Câu hỏi',   href: '/teacher/questions', icon: HelpCircle },
   { label: 'Đề thi',     href: '/teacher/exams',     icon: FileText },
   { label: 'Kỳ thi',     href: '/teacher/sessions',  icon: Calendar },
+  { label: 'Tài khoản', href: '/teacher/profile',   icon: UserCircle },
 ];
 
 export default function Sidebar() {

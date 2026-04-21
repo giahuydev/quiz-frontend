@@ -71,7 +71,7 @@ export function AddQuestionDialog({ onSuccess }: { onSuccess: () => void }) {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1">
                 <Label className="text-[10px] text-gray-400 font-bold uppercase">Nội dung câu hỏi</Label>
-                <textarea {...register('content')} rows={3} className="w-full border rounded-md p-2 text-xs focus:outline-none focus:border-primary" />
+                <textarea {...register('content' as any)} rows={3} className="w-full border rounded-md p-2 text-xs focus:outline-none focus:border-primary" />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {['a', 'b', 'c', 'd'].map(opt => (

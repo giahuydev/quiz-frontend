@@ -7,4 +7,5 @@ export const authService = {
   login:    (data: LoginPayload)    => api.post<AuthResponse>(ENDPOINTS.AUTH.LOGIN,    data),
   register: (data: RegisterPayload) => api.post<AuthResponse>(ENDPOINTS.AUTH.REGISTER, data),
   me:       ()                      => api.get<User>(ENDPOINTS.AUTH.ME),
+  changePassword: (data: { current_password: string; new_password: string }) => api.post(ENDPOINTS.AUTH.CHANGE_PASSWORD, data),
 };

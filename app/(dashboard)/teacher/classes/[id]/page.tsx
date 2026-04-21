@@ -127,12 +127,12 @@ export default function TeacherClassDetailPage() {
             <tbody className="divide-y divide-gray-50">
               {members.map((m) => (
                 <tr key={m.id} className="hover:bg-gray-50/30">
-                  <td className="px-4 py-3 text-xs font-bold text-gray-700">{m.name}</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{m.email}</td>
+                  <td className="px-4 py-3 text-xs font-bold text-gray-700">{m.student?.name}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">{m.student?.email}</td>
                   <td className="px-4 py-3 text-right">
                     <Button className="text-red-400 hover:text-red-600 uppercase font-bold text-[9px]"
                         onClick={async () => {
-                          if (!confirm(`Xoá ${m.name} khỏi lớp?`)) return;
+                          if (!confirm(`Xoá ${m.student?.name} khỏi lớp?`)) return;
                           try {
                             await classService.removeMember(classId, m.student_id);
                             setMembers(members.filter((x) => x.student_id !== m.student_id));

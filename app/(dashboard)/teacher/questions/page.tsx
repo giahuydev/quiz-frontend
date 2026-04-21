@@ -64,7 +64,7 @@ export default function QuestionsPage() {
           <p className="text-sm text-gray-400 animate-pulse">Đang tải ngân hàng câu hỏi...</p>
         </div>
       ) : (
-        <QuestionTable questions={filtered} />
+        <QuestionTable questions={filtered} onRefresh={fetchQuestions} />
       )}
     </div>
   );
