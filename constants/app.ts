@@ -1,3 +1,4 @@
+// File: quiz-frontend/constants/app.ts
 export const APP_NAME = 'Quiz Online';
 
 export const ROLE = {

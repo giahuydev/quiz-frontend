@@ -1,3 +1,4 @@
+// File: quiz-frontend/services/auth.service.ts
 
 import api from '@/lib/axios';
 import { ENDPOINTS } from '@/constants/api';

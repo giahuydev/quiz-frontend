@@ -1,3 +1,4 @@
+// File: quiz-frontend/app/(dashboard)/teacher/dashboard/page.tsx
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';

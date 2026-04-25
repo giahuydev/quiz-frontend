@@ -1,3 +1,4 @@
+// File: quiz-frontend/types/auth.ts
 export type Role = 'TEACHER' | 'STUDENT';
 
 export interface User {

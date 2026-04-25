@@ -1,3 +1,4 @@
+// File: quiz-frontend/app/(dashboard)/student/layout.tsx
 'use client';
 
 import Link from 'next/link';

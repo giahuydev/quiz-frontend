@@ -1,3 +1,4 @@
+// File: quiz-frontend/app/waiting-room/[sessionId]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';

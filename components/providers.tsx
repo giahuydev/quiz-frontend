@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/providers.tsx
 'use client';
 
 import { AuthProvider } from '@/hooks/useAuth';

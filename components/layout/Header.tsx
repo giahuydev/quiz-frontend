@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/layout/Header.tsx
 'use client';
 
 import { usePathname } from 'next/navigation';

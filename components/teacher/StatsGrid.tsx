@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/teacher/StatsGrid.tsx
 'use client';
 
 export function StatsGrid({ stats }: { stats: { label: string; value: string | number }[] }) {

@@ -1,3 +1,4 @@
+// File: quiz-frontend/services/class.service.ts
 import api from '@/lib/axios';
 import { ENDPOINTS } from '@/constants/api';
 import type { Class, ClassMember, Announcement } from '@/types/class';

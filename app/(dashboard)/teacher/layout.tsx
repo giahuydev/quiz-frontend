@@ -1,3 +1,4 @@
+// File: quiz-frontend/app/(dashboard)/teacher/layout.tsx
 'use client';
 
 import Sidebar from '@/components/layout/Sidebar';

@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/ui/table.tsx
 "use client"
 
 import * as React from "react"

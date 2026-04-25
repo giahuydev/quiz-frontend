@@ -1,3 +1,4 @@
+// File: quiz-frontend/types/class.ts
 export interface Class {
   id:         number;
   name:       string;

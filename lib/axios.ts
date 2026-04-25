@@ -1,3 +1,4 @@
+// File: quiz-frontend/lib/axios.ts
 import axios from 'axios';
 import { API_URL } from '@/constants/api';
 import { getToken, removeToken, isTokenExpired } from './auth';

@@ -1,3 +1,4 @@
+// File: quiz-frontend/types/result.ts
 export interface ExamResult {
   id:                    number;
   session_id:            number;

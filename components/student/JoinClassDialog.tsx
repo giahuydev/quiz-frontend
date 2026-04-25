@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/student/JoinClassDialog.tsx
 'use client';
 
 import { useState } from 'react';

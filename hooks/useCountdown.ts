@@ -1,3 +1,4 @@
+// File: quiz-frontend/hooks/useCountdown.ts
 'use client';
 
 import { useState, useEffect, useRef } from 'react';

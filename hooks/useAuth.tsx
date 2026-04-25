@@ -1,3 +1,4 @@
+// File: quiz-frontend/hooks/useAuth.tsx
 'use client';
 
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';

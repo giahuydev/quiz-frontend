@@ -1,3 +1,4 @@
+// File: quiz-frontend/services/result.service.ts
 import api from '@/lib/axios';
 import { ENDPOINTS } from '@/constants/api';
 import type { SubmitPayload } from '@/types/result';

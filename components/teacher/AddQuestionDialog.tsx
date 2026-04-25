@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/teacher/AddQuestionDialog.tsx
 'use client';
 
 import { useState, useRef } from 'react';

@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/teacher/ClassTable.tsx
 'use client';
 
 import Link from 'next/link';

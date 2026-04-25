@@ -1,3 +1,4 @@
+// File: quiz-frontend/lib/auth.ts
 const TOKEN_KEY = 'quiz_token';
 
 export interface TokenPayload {

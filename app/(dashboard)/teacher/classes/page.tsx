@@ -1,3 +1,4 @@
+// File: quiz-frontend/app/(dashboard)/teacher/classes/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';

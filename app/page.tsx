@@ -1,3 +1,4 @@
+// File: quiz-frontend/app/page.tsx
 'use client';
 
 import { useEffect } from 'react';

@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/teacher/QuestionTable.tsx
 'use client';
 
 import { useState } from 'react';

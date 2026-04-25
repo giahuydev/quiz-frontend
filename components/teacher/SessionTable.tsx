@@ -1,3 +1,4 @@
+// File: quiz-frontend/components/teacher/SessionTable.tsx
 'use client';
 
 import Link from 'next/link';

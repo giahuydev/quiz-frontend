@@ -1,3 +1,4 @@
+// File: quiz-frontend/types/exam.ts
 export interface Question {
   id:             number;
   content:        string;
