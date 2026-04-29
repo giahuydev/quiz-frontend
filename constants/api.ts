@@ -1,4 +1,3 @@
-// File: quiz-frontend/constants/api.ts
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 export const WS_URL  = process.env.NEXT_PUBLIC_WS_URL  ?? 'http://localhost:3001';
 
@@ -8,6 +7,10 @@ export const ENDPOINTS = {
     REGISTER: '/auth/register',
     ME:       '/auth/me',
     CHANGE_PASSWORD: '/auth/change-password',
+  },
+  QUESTION_SETS: {
+    BASE: '/question-sets',
+    BY_ID: (id: number) => `/question-sets/${id}`,
   },
   CLASSES: {
     BASE:          '/classes',

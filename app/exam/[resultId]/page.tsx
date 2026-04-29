@@ -1,7 +1,6 @@
-// File: quiz-frontend/app/exam/[resultId]/page.tsx
-'use client';
+﻿'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useCountdown } from '@/hooks/useCountdown';
 import { formatCountdown } from '@/lib/utils';
@@ -13,16 +12,35 @@ export default function ExamPage() {
   const params = useParams();
   const router = useRouter();
   const resultId = Number(params.resultId);
-  
-  const [questions, setQuestions] = useState<any[]>([]); 
+
+  const [questions, setQuestions] = useState<any[]>([]);
   const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<number, 'A' | 'B' | 'C' | 'D'>>({});
   const [overlay, setOverlay] = useState(false);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [endTime, setEndTime] = useState<Date>(new Date());
 
-  const seconds = useCountdown(endTime, () => handleSubmit());
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await resultService.submit(resultId, {
+        answers: questions.map((q) => ({
+          question_id: q.id,
+          chosen_answer: answers[q.id] ?? null,
+        })),
+      });
+      router.push(`/student/results/${resultId}`);
+    } catch {
+      alert('Lỗi khi nộp bài');
+      setSubmitting(false);
+    }
+  };
+
+  const seconds = useCountdown(endTime, () => {
+    void handleSubmit();
+  });
 
   useEffect(() => {
     resultService.getById(resultId)
@@ -30,7 +48,7 @@ export default function ExamPage() {
         const data = r.data;
         setQuestions(data.questions || []);
         setEndTime(new Date(data.end_time || Date.now() + 60 * 60 * 1000));
-        const saved: Record<number, string> = {};
+        const saved: Record<number, 'A' | 'B' | 'C' | 'D'> = {};
         data.questions?.forEach((q: any) => {
           if (q.student_answer) saved[q.id] = q.student_answer;
         });
@@ -47,27 +65,15 @@ export default function ExamPage() {
 
     document.addEventListener('visibilitychange', handleVisibility);
     document.addEventListener('fullscreenchange', handleFullscreen);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
       document.removeEventListener('fullscreenchange', handleFullscreen);
     };
   }, [resultId]);
 
-  const handleSelectAnswer = (questionId: number, answer: string) => {
-    setAnswers({ ...answers, [questionId]: answer });
-  };
-
-  const handleSubmit = async () => {
-    if (submitting) return;
-    setSubmitting(true);
-    try {
-      await resultService.submit(resultId);
-      router.push(`/student/results/${resultId}`);
-    } catch {
-      alert('Lỗi khi nộp bài');
-      setSubmitting(false);
-    }
+  const handleSelectAnswer = (questionId: number, answer: 'A' | 'B' | 'C' | 'D') => {
+    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   };
 
   if (loading) return <div className="h-screen flex items-center justify-center"><Spinner /></div>;
@@ -94,7 +100,7 @@ export default function ExamPage() {
         <div className={`font-mono text-xl font-bold tabular-nums tracking-tighter ${seconds < 300 ? 'text-red-600' : 'text-gray-900'}`}>
           {formatCountdown(seconds)}
         </div>
-        <Button size="xs" variant="outline" className="font-bold uppercase text-[9px] border-gray-300" onClick={() => confirm('Nộp bài?') && handleSubmit()}>
+        <Button size="xs" variant="outline" className="font-bold uppercase text-[9px] border-gray-300" onClick={() => confirm('Nộp bài?') && void handleSubmit()}>
           Nộp bài
         </Button>
       </div>
@@ -112,7 +118,7 @@ export default function ExamPage() {
                 const optText = currentQ[`option_${key.toLowerCase()}`];
                 const selected = answers[currentQ.id] === key;
                 return (
-                  <button key={key} onClick={() => handleSelectAnswer(currentQ.id, key)}
+                  <button key={key} onClick={() => handleSelectAnswer(currentQ.id, key as 'A' | 'B' | 'C' | 'D')}
                     className={`w-full flex items-start gap-4 px-4 py-4 rounded border text-xs text-left transition-all ${selected ? 'border-primary bg-primary text-white shadow-sm' : 'border-gray-100 text-gray-700 hover:bg-gray-50'}`}
                   >
                     <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${selected ? 'border-white text-white' : 'border-gray-200 text-gray-400'}`}>
@@ -137,12 +143,12 @@ export default function ExamPage() {
             {questions.map((q, i) => {
               const isDone = !!answers[q.id];
               const isActive = i === current;
-              
+
               return (
                 <button key={q.id} onClick={() => setCurrent(i)}
                   className={`w-9 h-9 rounded text-[10px] font-bold transition-all border relative
-                    ${isActive ? 'border-primary ring-1 ring-primary/20 bg-white text-primary scale-110 z-10' : 
-                      isDone ? 'bg-primary/10 border-transparent text-primary' : 
+                    ${isActive ? 'border-primary ring-1 ring-primary/20 bg-white text-primary scale-110 z-10' :
+                      isDone ? 'bg-primary/10 border-transparent text-primary' :
                       'bg-white border-gray-200 text-gray-500 hover:border-gray-400'}
                   `}
                 >

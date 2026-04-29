@@ -1,6 +1,7 @@
-// File: quiz-frontend/types/exam.ts
 export interface Question {
   id:             number;
+  teacher_id?:    number;
+  question_set_id?: number | null;
   content:        string;
   option_a:       string;
   option_b:       string;
@@ -12,6 +13,8 @@ export interface Question {
 
 export interface Exam {
   id:                number;
+  teacher_id?:       number;
+  question_set_id?:  number | null;
   title:             string;
   duration_minutes:  number;
   shuffle_questions: boolean;
