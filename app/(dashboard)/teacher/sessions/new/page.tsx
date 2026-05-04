@@ -19,7 +19,7 @@ export default function NewSessionPage() {
   const [waitingStartTime, setWaitingStartTime] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [mode, setMode] = useState<'LIVE' | 'ASSIGNED'>('LIVE');
+  const [mode] = useState<'LIVE'>('LIVE');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -122,15 +122,8 @@ export default function NewSessionPage() {
 
         <div className="space-y-1.5">
           <Label>Hình thức</Label>
-          <div className="grid grid-cols-2 gap-2">
-            {(['LIVE', 'ASSIGNED'] as const).map((m) => (
-              <button key={m} type="button" onClick={() => setMode(m)} className={[
-                'py-2.5 px-3 rounded border text-sm font-medium transition-colors',
-                mode === m ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400',
-              ].join(' ')}>
-                {m === 'LIVE' ? 'Thi trực tiếp' : 'Giao bài (có deadline)'}
-              </button>
-            ))}
+          <div className="py-2.5 px-3 rounded border text-sm font-medium bg-gray-900 text-white border-gray-900 inline-block">
+            Thi trực tiếp
           </div>
         </div>
 

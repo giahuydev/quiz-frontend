@@ -34,6 +34,8 @@ export interface ExamSession {
   start_time:         string;
   end_time:           string;
   created_at:         string;
+  exam?:              Exam;
+  duration_minutes?:  number | null;
 }
 
 export interface ShuffledQuestion {
