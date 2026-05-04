@@ -1,6 +1,6 @@
-// File: quiz-frontend/components/teacher/ExamTable.tsx
-'use client';
+﻿'use client';
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Exam } from '@/types/exam';
@@ -29,7 +29,9 @@ export function ExamTable({ exams }: { exams: Exam[] }) {
                 </Badge>
               </td>
               <td className="px-4 py-3 text-right">
-                <Button variant="ghost" size="sm" className="h-7 text-xs">Xem</Button>
+                <Link href={`/teacher/exams/${e.id}`}>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs">Xem</Button>
+                </Link>
               </td>
             </tr>
           ))}

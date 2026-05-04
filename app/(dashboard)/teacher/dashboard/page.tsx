@@ -1,18 +1,62 @@
-// File: quiz-frontend/app/(dashboard)/teacher/dashboard/page.tsx
-'use client';
+﻿'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { StatsGrid } from '@/components/teacher/StatsGrid';
+import { classService } from '@/services/class.service';
+import { questionService } from '@/services/question.service';
+import { examService } from '@/services/exam.service';
+import { sessionService } from '@/services/session.service';
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  
-  const stats = [
-    { label: 'Lớp học', value: 0 },
-    { label: 'Câu hỏi', value: 0 },
-    { label: 'Đề thi',  value: 0 },
-    { label: 'Kỳ thi',  value: 0 },
-  ];
+  const [counts, setCounts] = useState({
+    classes: 0,
+    questions: 0,
+    exams: 0,
+    sessions: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    Promise.allSettled([
+      classService.getAll(),
+      questionService.getAll(),
+      examService.getAll(),
+      sessionService.getAll(),
+    ])
+      .then((results) => {
+        if (!mounted) return;
+
+        const [classesRes, questionsRes, examsRes, sessionsRes] = results;
+
+        setCounts({
+          classes: classesRes.status === 'fulfilled' ? classesRes.value.data.length : 0,
+          questions: questionsRes.status === 'fulfilled' ? questionsRes.value.data.length : 0,
+          exams: examsRes.status === 'fulfilled' ? examsRes.value.data.length : 0,
+          sessions: sessionsRes.status === 'fulfilled' ? sessionsRes.value.data.length : 0,
+        });
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const stats = useMemo(
+    () => [
+      { label: 'Lớp học', value: loading ? '...' : counts.classes },
+      { label: 'Câu hỏi', value: loading ? '...' : counts.questions },
+      { label: 'Đề thi', value: loading ? '...' : counts.exams },
+      { label: 'Kỳ thi', value: loading ? '...' : counts.sessions },
+    ],
+    [counts, loading],
+  );
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -24,13 +68,6 @@ export default function DashboardPage() {
       </div>
 
       <StatsGrid stats={stats} />
-
-      <div className="border border-dashed border-gray-100 rounded-md p-12 text-center bg-white">
-        <div className="max-w-xs mx-auto space-y-1">
-          <p className="text-[10px] font-bold text-gray-400 uppercase">Dữ liệu phân tích</p>
-          <p className="text-xs text-gray-300">Biểu đồ thống kê sẽ hiển thị sau khi có dữ liệu từ API.</p>
-        </div>
-      </div>
     </div>
   );
 }
